@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/socialSphere-org.png";
 import {
@@ -12,20 +12,20 @@ FaFacebook,
   FaBars,
   FaTimes,
   FaChevronDown,
-  FaCalendarAlt, // <-- NEW ICON
-  FaRecycle, // <-- NEW ICON
-  FaClock, // <-- NEW ICON
-  FaClipboardList, // <-- NEW ICON
-  FaChartLine, // <-- NEW ICON
-  FaRobot, // <-- NEW ICON
-  FaClipboardCheck, // <-- NEW ICON for Audit
+  FaCalendarAlt, 
+  FaRecycle, 
+  FaClock, 
+  FaClipboardList, 
+  FaChartLine, 
+  FaRobot, 
+  FaClipboardCheck, 
   FaCogs, 
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Spline from '@splinetool/react-spline'; 
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'; // <-- NEW IMPORT
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'; 
 
 
 const SPLINE_URL = "https://prod.spline.design/9IXWiwbSDcBJAHyB/scene.splinecode"; // Robot URL
@@ -58,6 +58,22 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
+
+  // FIX: Hooks for Conditional Rendering
+  const containerRef = useRef(null);
+  const [isContainerReady, setIsContainerReady] = useState(false);
+
+  useEffect(() => {
+      // Use a small delay (e.g., 100ms) to ensure the browser has finished layout calculations
+      const timer = setTimeout(() => {
+          if (containerRef.current && containerRef.current.offsetHeight > 0) {
+              setIsContainerReady(true);
+          }
+      }, 100); 
+
+      return () => clearTimeout(timer);
+  }, []);
+  // END OF FIX hooks
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -450,15 +466,21 @@ export default function Home() {
                 </Link>
             </motion.div>
             
-            {/* Right Column: 3D Model */}
+            {/* Right Column: 3D Model (FIXED with Conditional Rendering) */}
             <motion.div
+                ref={containerRef} // ADDED REF HERE
                 initial={{ opacity: 0, x: 50, scale: 0.8 }}
                 whileInView={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ duration: 1.2, delay: 0.3 }}
                 viewport={{ once: true }}
                 className="w-full h-90 lg:h-[650px] flex items-center justify-center"
             >
-                <Spline scene={SPLINE_URL} />
+                {isContainerReady ? ( // ADDED CONDITIONAL RENDERING
+                    <Spline scene={SPLINE_URL} />
+                ) : (
+                    // Placeholder while waiting for dimensions
+                    <FaRobot className="text-pink-500 text-6xl animate-pulse" /> 
+                )}
             </motion.div>
         </div>
       </section>

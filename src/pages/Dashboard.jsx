@@ -33,7 +33,7 @@ import {
 } from "react-icons/fa";
 
 // Constants
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_RENDER_BASE_URL;
 
 export default function Dashboard() {
   // ====== States ======
@@ -299,8 +299,9 @@ export default function Dashboard() {
 
   // ====== Sentiment Analysis Handler ======
   const handleAnalyzeSentiment = async () => {
-    if (!newPost.trim()) {
-      showToast("Please write a post first to analyze its sentiment.", "warning");
+    // FIX: Check if EITHER text OR media exists
+    if (!newPost.trim() && !mediaFile) { 
+      showToast("Please write a post or upload media to analyze its sentiment.", "warning");
       return;
     }
 
@@ -308,8 +309,23 @@ export default function Dashboard() {
     setSentiment(null);
     setShowSentimentAnalysis(true);
 
+    const formData = new FormData();
+    // FIX: Append text under the key 'text'
+    formData.append("text", newPost.trim()); 
+    
+    // FIX: Conditionally append media under the key 'media'
+    if (mediaFile) {
+        formData.append("media", mediaFile); 
+    }
+
     try {
-      const res = await API.post("/sentiment/analyze", { text: newPost });
+      // Send FormData to the multimodal endpoint
+      const res = await API.post("/sentiment/analyze", formData, {
+        headers: {
+            // NOTE: Axios usually sets this automatically for FormData, but it's good to ensure
+            "Content-Type": "multipart/form-data", 
+        }
+      });
       setSentiment(res.data.sentiment);
     } catch (err) {
       console.error("Sentiment analysis failed:", err.response?.data || err.message);

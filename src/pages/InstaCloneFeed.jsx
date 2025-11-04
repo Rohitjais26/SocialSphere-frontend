@@ -23,7 +23,7 @@ import {
 } from "react-icons/fa";
 
 // Constants
-const BASE_URL = "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_RENDER_BASE_URL;
 
 // NEW: Use dynamic data for the current user (if available)
 const MOCK_AVATAR = "https://placehold.co/40x40/c13584/ffffff?text=U"; 

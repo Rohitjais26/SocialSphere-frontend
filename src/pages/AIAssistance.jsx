@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom'; // Import Link for footer navigation
-import { FaComments, FaCheckCircle, FaLightbulb, FaRobot, FaBullhorn, FaFacebook, FaInstagram, FaLinkedin, FaTwitter, FaTiktok, FaPinterest, FaYoutube } from 'react-icons/fa';
+import { FaComments, FaCheckCircle, FaLightbulb, FaRobot, FaBullhorn, FaFacebook, FaInstagram, FaLinkedin, FaTwitter, FaYoutube } from 'react-icons/fa';
 // NOTE: You must run 'npm install @splinetool/react-spline'
 import Spline from '@splinetool/react-spline'; 
 
@@ -10,6 +10,22 @@ const SPLINE_URL = "https://prod.spline.design/9IXWiwbSDcBJAHyB/scene.splinecode
 
 export default function AIAssistance() {
     
+    // Hooks for Conditional Rendering (The FIX)
+    const containerRef = useRef(null);
+    const [isContainerReady, setIsContainerReady] = useState(false);
+
+    useEffect(() => {
+        // Use a small delay (e.g., 100ms) to ensure the browser has finished layout calculations
+        const timer = setTimeout(() => {
+            if (containerRef.current && containerRef.current.offsetHeight > 0) {
+                setIsContainerReady(true);
+            }
+        }, 100); 
+
+        return () => clearTimeout(timer);
+    }, []);
+    // End of FIX hooks
+
     const benefits = [
         { icon: FaComments, title: "24/7 Availability", description: "Get instant support and content ideas around the clock, eliminating wait times." },
         { icon: FaLightbulb, title: "Enhanced Creativity", description: "Break writer’s block with AI-generated captions and strategic content suggestions." },
@@ -120,16 +136,20 @@ export default function AIAssistance() {
                         </div>
                     </motion.div>
 
-                    {/* --- RIGHT COLUMN: 3D Model (Swapped Position) --- */}
+                    {/* --- RIGHT COLUMN: 3D Model (FIXED with Conditional Rendering) --- */}
                     <motion.div
+                        ref={containerRef} // Apply the ref to the container
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 1, delay: 0.2 }}
-                        // UPDATED: Increased height to lg:h-[700px] and added flex/translate for upward movement
                         className="w-full h-96 lg:h-[700px] flex items-center justify-center -translate-y-10" 
                     >
-                        {/* Embed the Spline 3D Model */}
-                        <Spline scene={SPLINE_URL} />
+                        {isContainerReady ? ( // RENDER ONLY IF CONTAINER HAS SIZE
+                            <Spline scene={SPLINE_URL} />
+                        ) : (
+                            // Placeholder while loading/waiting for dimensions
+                            <FaRobot className="text-pink-500 text-6xl animate-pulse" /> 
+                        )}
                     </motion.div>
                 </div>
 
