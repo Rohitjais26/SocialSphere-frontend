@@ -1,0 +1,442 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
+import { motion } from "framer-motion";
+
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+import {
+  FaFacebook,
+  FaInstagram,
+  FaTwitter,
+  FaLinkedin,
+  FaTiktok,
+  FaPinterest,
+  FaYoutube,
+} from "react-icons/fa";
+import { chatAgent } from "../services/chatAgent"; // 🔹 Import ChatAgent
+
+export default function Dashboard() {
+  // ====== States ======
+  const [data, setData] = useState(null);
+  const [user, setUser] = useState(null);
+  const [accountConnected, setAccountConnected] = useState(false);
+
+  // Post Scheduler
+  const [posts, setPosts] = useState([]);
+  const [newPost, setNewPost] = useState("");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+
+  // Chatbot state
+  const [messages, setMessages] = useState([
+    {
+      sender: "bot",
+      text: "👋 Hello! I’m SocialSphere Co-Pilot. Please choose a domain: Features, Instagram, Schedule, Analytics, Creator, Help.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+
+  const navigate = useNavigate();
+
+  // ====== Fetch Dashboard Data ======
+  useEffect(() => {
+    API.get("/dashboard")
+      .then((res) => {
+        setData(res.data);
+        setUser(res.data?.user || { name: "User" });
+      })
+      .catch((err) => {
+        console.error("Dashboard error:", err.response?.data || err.message);
+        if (err.response?.status === 401) {
+          alert("Unauthorized. Please login again.");
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }
+      });
+  }, []);
+
+  // ====== Account Connect ======
+  const handleConnectAccount = () => {
+    setAccountConnected(true);
+  };
+
+  // ====== Handle Post Scheduler ======
+  const handlePost = () => {
+    if (!newPost.trim() || !scheduleDate || !scheduleTime) return;
+
+    setPosts([
+      ...posts,
+      { content: newPost, date: scheduleDate, time: scheduleTime },
+    ]);
+
+    setNewPost("");
+    setScheduleDate("");
+    setScheduleTime("");
+  };
+
+  // ====== Chatbot Send Message ======
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+
+    const reply = await chatAgent.run(input);
+    const botMessage = { sender: "bot", text: reply };
+    setMessages((prev) => [...prev, botMessage]);
+
+    setInput("");
+  };
+
+  // ====== Logout ======
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // clear saved token
+    navigate("/"); // go back to Home.jsx
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative">
+      {/* ================= Navbar ================= */}
+      <header className="fixed top-0 w-full bg-black/70 backdrop-blur-md border-b border-white/10 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link to="/" className="text-2xl font-bold text-cyan-400">
+            SocialSphere
+          </Link>
+          <nav className="hidden md:flex gap-8 text-gray-300">
+            <Link to="" className="hover:text-cyan-400 transition">
+              Your Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="ml-6 px-4 py-2 bg-cyan-400 text-black font-semibold rounded-lg hover:bg-cyan-300 transition"
+            >
+              Logout
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* ================= Dashboard Content ================= */}
+      <div className="max-w-7xl mx-auto px-6 py-32">
+        <motion.h1
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-4xl md:text-5xl font-bold text-cyan-400 mb-10"
+        >
+          Hello, {user?.name || "Guest"} 👋
+        </motion.h1>
+
+        {/* Social Account Connection */}
+        {!accountConnected ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="bg-black/40 border border-white/10 rounded-2xl p-8 text-center shadow-lg"
+          >
+            <h2 className="text-2xl font-semibold mb-6">
+              Connect Your Social Media Accounts
+            </h2>
+            <div className="flex justify-center gap-6 text-4xl text-gray-500 mb-6">
+              {[FaFacebook, FaInstagram, FaTwitter, FaLinkedin].map(
+                (Icon, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ scale: 1.5, color: "#22d3ee" }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                  >
+                    <Icon />
+                  </motion.div>
+                )
+              )}
+            </div>
+            <button
+              onClick={handleConnectAccount}
+              className="px-6 py-3 bg-cyan-400 text-black rounded-lg font-semibold hover:bg-cyan-300 transition"
+            >
+              Connect Account
+            </button>
+          </motion.div>
+        ) : (
+          <div className="space-y-12">
+            {/* ================= Analytics Overview ================= */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              className="bg-black/40 border border-white/10 rounded-2xl p-8 shadow-lg"
+            >
+              <h2 className="text-2xl font-semibold mb-4">Analytics Overview</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                {[
+                  { label: "Posts", value: 128 },
+                  { label: "Followers", value: "5.3k" },
+                  { label: "Engagement", value: "12%" },
+                  { label: "Reach", value: "23.4k" },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={{ scale: 1.1 }}
+                    className="p-4 bg-gray-800 rounded-lg shadow-md"
+                  >
+                    <p className="text-2xl font-bold text-cyan-400">
+                      {stat.value}
+                    </p>
+                    <p className="text-gray-400">{stat.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* ================= Detailed Analytics (Step 4) ================= */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              className="bg-black/40 border border-white/10 rounded-2xl p-8 shadow-lg"
+            >
+              <h2 className="text-2xl font-semibold mb-6">Post Performance</h2>
+
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={[
+                    { name: "Mon", posts: 4, engagement: 120 },
+                    { name: "Tue", posts: 6, engagement: 300 },
+                    { name: "Wed", posts: 3, engagement: 180 },
+                    { name: "Thu", posts: 5, engagement: 240 },
+                    { name: "Fri", posts: 7, engagement: 400 },
+                    { name: "Sat", posts: 2, engagement: 100 },
+                    { name: "Sun", posts: 4, engagement: 220 },
+                  ]}
+                >
+                  <CartesianGrid stroke="#333" />
+                  <XAxis dataKey="name" stroke="#aaa" />
+                  <YAxis stroke="#aaa" />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="posts"
+                    stroke="#22d3ee"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="engagement"
+                    stroke="#9333ea"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+
+              <div className="grid grid-cols-3 gap-6 text-center mt-6">
+                <div className="p-4 bg-gray-800 rounded-lg">
+                  <p className="text-2xl font-bold text-cyan-400">1.2k</p>
+                  <p className="text-gray-400">Likes</p>
+                </div>
+                <div className="p-4 bg-gray-800 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-400">450</p>
+                  <p className="text-gray-400">Comments</p>
+                </div>
+                <div className="p-4 bg-gray-800 rounded-lg">
+                  <p className="text-2xl font-bold text-pink-400">300</p>
+                  <p className="text-gray-400">Shares</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ================= Post Scheduler ================= */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              className="bg-black/40 border border-white/10 rounded-2xl p-8 shadow-lg"
+            >
+              <h2 className="text-2xl font-semibold mb-4">Post Scheduler</h2>
+
+              {/* Post Content */}
+              <textarea
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+                placeholder="Write your post..."
+                className="w-full p-4 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:border-cyan-400"
+              />
+
+              {/* Date & Time Inputs */}
+              <div className="mt-4 flex flex-col md:flex-row gap-4">
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  className="flex-1 p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:border-cyan-400"
+                />
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="flex-1 p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              
+
+              {/* Schedule Button */}
+              <button
+                onClick={handlePost}
+                className="mt-4 px-6 py-3 bg-cyan-400 text-black rounded-lg font-semibold hover:bg-cyan-300 transition"
+              >
+                Schedule Post
+              </button>
+
+              {/* Scheduled Posts List */}
+              <div className="mt-6 space-y-4">
+                {posts.map((p, i) => (
+                  <div
+                    key={i}
+                    className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+                  >
+                    <p className="font-medium">{p.content}</p>
+                    <span className="text-xs text-gray-500">
+                      Scheduled for: {p.date} at {p.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+
+      {/* ================= Chatbot ================= */}
+      <motion.div
+        initial={{ x: 300 }}
+        animate={{ x: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="fixed bottom-6 right-6 w-80 h-96 bg-gray-900 border border-cyan-400 rounded-2xl shadow-lg flex flex-col overflow-hidden"
+      >
+        <div className="bg-cyan-400 text-black p-3 font-bold text-lg">
+          SocialSphere Co-Pilot
+        </div>
+        <div className="flex-1 p-4 overflow-y-auto space-y-2 text-sm">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`p-3 rounded-lg w-fit max-w-[80%] ${
+                msg.sender === "user"
+                  ? "bg-cyan-500 text-black self-end ml-auto"
+                  : "bg-gray-800 text-white self-start"
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
+        <div className="p-3 border-t border-gray-700 flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask Co-Pilot..."
+            className="flex-1 p-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-cyan-400"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="px-4 bg-cyan-400 text-black rounded-lg font-semibold hover:bg-cyan-300 transition"
+          >
+            Send
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ================= Footer ================= */}
+      <footer className="py-12 bg-black border-t border-white/10 text-center mt-24">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-gray-400">
+          <div>
+            <h3 className="text-cyan-400 font-bold text-xl mb-4">
+              SocialSphere
+            </h3>
+            <p>Manage all your social presence in one place.</p>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/integrations" className="hover:text-cyan-400">
+                  Integrations
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="hover:text-cyan-400">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="hover:text-cyan-400">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-cyan-400">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4">Features</h4>
+            <ul className="space-y-2">
+              <li>AI Content Generation</li>
+              <li>Scheduling</li>
+              <li>Analytics</li>
+              <li>Social Media Auditing</li>
+              <li>Calendar Management</li>
+            </ul>
+          </div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 1 }}
+          className="mt-16 max-w-5xl mx-auto relative z-10"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold mb-10">
+            Seamless Integrations
+          </h2>
+          <div className="flex flex-wrap justify-center gap-12 text-5xl text-gray-500">
+            {[
+              FaFacebook,
+              FaInstagram,
+              FaLinkedin,
+              FaTwitter,
+              FaTiktok,
+              FaPinterest,
+              FaYoutube,
+            ].map((Icon, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 2, color: "#22d3" }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <Icon />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        <div className="mt-8 text-sm text-gray-500">
+          © {new Date().getFullYear()} SocialSphere. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  );
+}
