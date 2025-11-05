@@ -22,8 +22,22 @@ import {
   FaUser,
 } from "react-icons/fa";
 
-// Constants
+// =======================================================
+// FIX 1A: Read BASE_URL from Vercel environment variable
+// This is used for legacy or non-Cloudinary file paths.
+// =======================================================
 const BASE_URL = import.meta.env.VITE_RENDER_BASE_URL;
+
+// =======================================================
+// FIX 1B: Helper function to determine the correct source URL
+// If the URL is a full HTTPS link (Cloudinary), use it directly.
+// Otherwise, prepend the BASE_URL.
+// =======================================================
+const getMediaSrc = (mediaUrl) => {
+    if (!mediaUrl) return '';
+    if (mediaUrl.startsWith('http')) return mediaUrl;
+    return `${BASE_URL}/${mediaUrl}`;
+};
 
 // NEW: Use dynamic data for the current user (if available)
 const MOCK_AVATAR = "https://placehold.co/40x40/c13584/ffffff?text=U"; 
@@ -66,7 +80,8 @@ const InstaPostCard = ({ post, index, currentUsername }) => {
             {post.mediaUrl ? (
                 <div className="w-full bg-gray-100 aspect-square flex items-center justify-center">
                     <img
-                        src={`${BASE_URL}/${post.mediaUrl}`}
+                        // FIX APPLIED HERE
+                        src={getMediaSrc(post.mediaUrl)}
                         alt="Published Post Media"
                         className="w-full h-full object-cover"
                         onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x400/f0f0f0/808080?text=Media+Error'; }}

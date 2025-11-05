@@ -32,8 +32,22 @@ import {
   FaTrashAlt, 
 } from "react-icons/fa";
 
-// Constants
+// =========================================================================
+// FIX 1A: Update BASE_URL to read from Vercel environment variable (VITE_RENDER_BASE_URL)
+// This is critical for images (Cloudinary URLs) to display on the live site.
+// =========================================================================
 const BASE_URL = import.meta.env.VITE_RENDER_BASE_URL;
+
+// =========================================================================
+// FIX 1B: Helper function to determine the correct source URL
+// If the URL already starts with http/https, it's a Cloudinary link (use it directly)
+// Otherwise, assume it's a local upload path (prepend BASE_URL)
+// =========================================================================
+const getMediaSrc = (mediaUrl) => {
+    if (!mediaUrl) return '';
+    if (mediaUrl.startsWith('http')) return mediaUrl;
+    return `${BASE_URL}/${mediaUrl}`;
+};
 
 export default function Dashboard() {
   // ====== States ======
@@ -297,9 +311,11 @@ export default function Dashboard() {
     );
   };
 
-  // ====== Sentiment Analysis Handler ======
+  // =========================================================================
+  // FIX 2: Updated Sentiment Analysis Handler for Multimodal Upload
+  // =========================================================================
   const handleAnalyzeSentiment = async () => {
-    // FIX: Check if EITHER text OR media exists
+    // FIX 2A: Check if EITHER text OR media exists
     if (!newPost.trim() && !mediaFile) { 
       showToast("Please write a post or upload media to analyze its sentiment.", "warning");
       return;
@@ -309,21 +325,18 @@ export default function Dashboard() {
     setSentiment(null);
     setShowSentimentAnalysis(true);
 
+    // FIX 2B: Use FormData for multimodal upload
     const formData = new FormData();
-    // FIX: Append text under the key 'text'
     formData.append("text", newPost.trim()); 
-    
-    // FIX: Conditionally append media under the key 'media'
     if (mediaFile) {
         formData.append("media", mediaFile); 
     }
 
     try {
-      // Send FormData to the multimodal endpoint
+      // FIX 2C: Send FormData with correct headers
       const res = await API.post("/sentiment/analyze", formData, {
         headers: {
-            // NOTE: Axios usually sets this automatically for FormData, but it's good to ensure
-            "Content-Type": "multipart/form-data", 
+            "Content-Type": "multipart/form-data", // Essential for file uploads
         }
       });
       setSentiment(res.data.sentiment);
@@ -614,13 +627,30 @@ export default function Dashboard() {
                   placeholder="Write a post to analyze its sentiment..."
                   className="w-full p-4 rounded-lg bg-black/40 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
                 />
+                
+                {/* File Upload Input (Retained from Post Scheduler) */}
+                <div className="mt-4">
+                    <label className="block text-sm font-medium mb-2 text-white">
+                    Upload Media (Optional)
+                    </label>
+                    <input
+                        type="file"
+                        onChange={(e) => setMediaFile(e.target.files[0])}
+                        className="w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-xl file:border-0 
+                            file:text-sm file:font-semibold
+                            file:bg-pink-500/10 file:text-pink-400 
+                            hover:file:bg-pink-500/20"
+                    />
+                </div>
 
                 {/* Analyze Button */}
                 <div className="flex justify-end">
                   <button
                     onClick={handleAnalyzeSentiment}
                     className={`${PRIMARY_BTN_CLASS.replace("px-6", "px-4").replace("py-3", "py-2")} disabled:opacity-50`} // Apply primary style, size adjusted
-                    disabled={loadingSentiment || !newPost.trim()}
+                    disabled={loadingSentiment || (!newPost.trim() && !mediaFile)} // Check for EITHER text OR media
                   >
                     {loadingSentiment ? "Analyzing..." : "Analyze Sentiment"}
                   </button>
@@ -798,7 +828,7 @@ export default function Dashboard() {
                       <p className="font-medium mb-2 pr-12">{p.content}</p>
                       {p.mediaUrl && (
                         <img
-                          src={`${BASE_URL}/${p.mediaUrl}`}
+                          src={getMediaSrc(p.mediaUrl)} // FIX APPLIED HERE
                           alt="Post media"
                           className="mt-2 rounded-lg w-full max-h-40 object-cover"
                         />
@@ -842,7 +872,7 @@ export default function Dashboard() {
                       <p className="font-medium mb-2 pr-12">{d.content}</p>
                       {d.mediaUrl && (
                         <img
-                          src={`${BASE_URL}/${d.mediaUrl}`}
+                          src={getMediaSrc(d.mediaUrl)} // FIX APPLIED HERE
                           alt="Post media"
                           className="mt-2 rounded-lg w-full max-h-40 object-cover"
                         />
