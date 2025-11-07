@@ -1,13 +1,49 @@
-# React + Vite
+# 🌐 SocialSphere Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Live Website:** [https://social-sphere-frontend-five.vercel.app/](https://social-sphere-frontend-five.vercel.app/)
 
-Currently, two official plugins are available:
+SocialSphere is an **AI-powered social media management platform** that helps users plan, generate, analyze, and publish content across multiple platforms with automation and intelligence.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🚀 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# SocialSphere-frontend
+- **React.js** – Frontend framework  
+- **Tailwind CSS** – Modern responsive design  
+- **Axios** – API communication  
+- **React Router** – Client-side routing  
+- **Vercel** – Deployment platform  
+
+---
+
+## 🧠 Features
+
+- Dynamic, responsive UI for all screen sizes  
+- Integration with AI models for content generation  
+- Dashboard for managing posts and analytics  
+- Authentication using Firebase/OAuth2  
+- API connectivity with backend (Node.js + Express)  
+
+---
+
+## 🖥️ Live Demo
+👉 [Visit SocialSphere](https://social-sphere-frontend-five.vercel.app/)
+
+---
+
+## 🧩 Project Repositories
+
+| Component | Repository |
+|------------|-------------|
+| 🖥️ Frontend | [SocialSphere Frontend](https://github.com/your-username/social-sphere-frontend) |
+| ⚙️ Backend | [SocialSphere Backend](https://github.com/your-username/social-sphere-backend) |
+
+---
+
+## 🛠️ Local Setup
+
+```bash
+git clone https://github.com/your-username/social-sphere-frontend.git
+cd social-sphere-frontend
+npm install
+npm run dev
